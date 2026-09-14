@@ -9,7 +9,7 @@ pr:
       - main
 
 pool:
-  vmImage: 'my-react-aap'
+  name: 'my-react-aap'
 
 variables:
   nodeVersion: '20.x'
