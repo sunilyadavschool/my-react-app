@@ -1,0 +1,106 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  nodeVersion: '20.x'
+  awsRegion: 'ap-south-1'
+  s3Bucket: 'my-react-production-app'
+
+stages:
+
+# ==========================================================
+# BUILD
+# ==========================================================
+
+- stage: Build
+  displayName: 'Build React Application'
+
+  jobs:
+  - job: BuildReact
+    displayName: 'Build React'
+
+    steps:
+
+    - checkout: self
+      displayName: 'Checkout GitHub Code'
+
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '$(nodeVersion)'
+
+    - script: |
+        node --version
+        npm --version
+      displayName: 'Check Node Version'
+
+    - script: |
+        npm ci
+      displayName: 'Install Dependencies'
+
+    - script: |
+        npm run build
+      displayName: 'Build React Application'
+
+    - script: |
+        echo "Build output:"
+        ls -la
+        ls -la dist
+      displayName: 'Verify Build'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish React Artifact'
+      inputs:
+        targetPath: 'dist'
+        artifact: 'react-build'
+        publishLocation: 'pipeline'
+
+
+# ==========================================================
+# DEPLOY TO S3
+# ==========================================================
+
+- stage: Deploy
+  displayName: 'Deploy React to S3'
+
+  dependsOn: Build
+
+  condition: succeeded()
+
+  jobs:
+
+  - deployment: DeployToS3
+    displayName: 'Deploy to AWS S3'
+
+    environment: 'production'
+
+    strategy:
+      runOnce:
+
+        deploy:
+
+          steps:
+
+          - download: current
+            artifact: react-build
+            displayName: 'Download React Artifact'
+
+          - task: AWSCLI@1
+            displayName: 'Deploy React to S3'
+            inputs:
+              awsCredentials: 'AWS-Production'
+              regionName: '$(awsRegion)'
+              awsCommand: 's3'
+              awsSubCommand: 'sync'
+              awsArguments: '$(Pipeline.Workspace)/react-build s3://$(s3Bucket) --delete'
+              failOnStandardError: true
