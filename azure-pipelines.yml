@@ -99,9 +99,16 @@ stages:
             displayName: 'Verify React Artifact'
 
           - powershell: |
+              $aws = "C:\Program Files\Amazon\AWSCLIV2\aws.exe"
+
               Write-Host "Checking AWS CLI..."
-              aws --version
-              where.exe aws
+              
+              if (-not (Test-Path $aws)) {
+                  Write-Error "AWS CLI not found at $aws"
+                  exit 1
+              }
+
+              & $aws --version
             displayName: 'Verify AWS CLI'
 
           - task: AWSCLI@1
