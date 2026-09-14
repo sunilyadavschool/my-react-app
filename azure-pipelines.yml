@@ -61,7 +61,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: 'Publish React Artifact'
       inputs:
-        targetPath: 'dist'
+        targetPath: 'build'
         artifact: 'react-build'
         publishLocation: 'pipeline'
 
