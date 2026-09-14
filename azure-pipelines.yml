@@ -74,7 +74,6 @@ stages:
   displayName: 'Deploy React to S3'
 
   dependsOn: Build
-
   condition: succeeded()
 
   jobs:
@@ -86,7 +85,6 @@ stages:
 
     strategy:
       runOnce:
-
         deploy:
 
           steps:
@@ -94,6 +92,17 @@ stages:
           - download: current
             artifact: react-build
             displayName: 'Download React Artifact'
+
+          - powershell: |
+              Write-Host "Checking downloaded React files..."
+              Get-ChildItem "$(Pipeline.Workspace)\react-build" -Recurse
+            displayName: 'Verify React Artifact'
+
+          - powershell: |
+              Write-Host "Checking AWS CLI..."
+              aws --version
+              where.exe aws
+            displayName: 'Verify AWS CLI'
 
           - task: AWSCLI@1
             displayName: 'Deploy React to S3'
