@@ -52,11 +52,11 @@ stages:
         npm run build
       displayName: 'Build React Application'
 
-    - script: |
-        echo "Build output:"
-        ls -la
-        ls -la dist
-      displayName: 'Verify Build'
+    # - script: |
+    #     echo "Build output:"
+    #     ls -la
+    #     ls -la dist
+    #   displayName: 'Verify Build'
 
     - task: PublishPipelineArtifact@1
       displayName: 'Publish React Artifact'
